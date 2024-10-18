@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-    <html lang="en">
+<html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Fingerprint 2FA Authentication</title>
+        <title>Fingerprint 2FA Authentication (Demo Mode)</title>
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -26,7 +26,7 @@
         </style>
     </head>
     <body>
-        <h2>Fingerprint 2FA Authentication</h2>
+        <h2>Fingerprint 2FA Authentication (Demo Mode)</h2>
         <button id="register-btn">Register Fingerprint</button>
         <button id="login-btn">Login with Fingerprint</button>
         <p id="message"></p>
@@ -43,28 +43,33 @@
                     .replace(/=/g, '');
             }
     
+            // Example challenge and user data for registration (hardcoded for demo)
+            const exampleChallenge = "c29tZS1yYW5kb20tY2hhbGxlbmdl"; // "some-random-challenge" (Base64 encoded)
+            const exampleUserId = "dXNlcklk"; // "userId" (Base64 encoded)
+            const exampleUserEmail = "user@example.com";
+            
+            let exampleCredentialId = "Y3JlZGVudGlhbElk"; // "credentialId" (Base64 encoded)
+    
+            // Simulate registration
             document.getElementById('register-btn').addEventListener('click', async () => {
                 try {
-                    const response = await fetch('http://localhost:8080/api/register-challenge');
-                    const challengeData = await response.json();
+                    // Hardcoded public key creation options
                     const publicKeyCredentialCreationOptions = {
-                        challenge: bufferDecode(challengeData.challenge),
-                        rp: {
-                            name: "UnDentified"
-                        },
+                        challenge: bufferDecode(exampleChallenge),
+                        rp: { name: "DemoRP" },
                         user: {
-                            id: bufferDecode(challengeData.userId),
-                            name: challengeData.userEmail,
-                            displayName: challengeData.userEmail
+                            id: bufferDecode(exampleUserId),
+                            name: exampleUserEmail,
+                            displayName: exampleUserEmail
                         },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }],
                         authenticatorSelection: { userVerification: "preferred" }
                     };
     
-                    const credential = await navigator.credentials.create({
-                        publicKey: publicKeyCredentialCreationOptions
-                    });
+                    // Simulate fingerprint registration (WebAuthn credential creation)
+                    const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreationOptions });
     
+                    // Format registration response
                     const registrationResponse = {
                         id: credential.id,
                         rawId: bufferEncode(credential.rawId),
@@ -74,38 +79,33 @@
                             clientDataJSON: bufferEncode(credential.response.clientDataJSON)
                         }
                     };
-    
-                    const result = await fetch('http://localhost:8080/api/register', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(registrationResponse)
-                    });
-    
-                    const resultData = await result.json();
-                    document.getElementById('message').innerText = resultData.success ? 'Registration successful!' : 'Registration failed';
+                    exampleCredentialId = registrationResponse.id;
+                    // Simulate successful registration
+                    document.getElementById('message').innerText = `Registration successful! Credential ID: ${registrationResponse.id}`;
                 } catch (error) {
                     document.getElementById('message').innerText = 'Error during registration: ' + error;
                 }
             });
     
+            // Example credential ID for authentication (hardcoded for demo)
+    
+            // Simulate authentication
             document.getElementById('login-btn').addEventListener('click', async () => {
                 try {
-                    const response = await fetch('http://localhost:8080/api/authenticate-challenge');
-                    const challengeData = await response.json();
-    
+                    // Hardcoded public key request options
                     const publicKeyCredentialRequestOptions = {
-                        challenge: bufferDecode(challengeData.challenge),
+                        challenge: bufferDecode(exampleChallenge),
                         allowCredentials: [{
-                            id: bufferDecode(challengeData.credentialId),
+                            id: bufferDecode(exampleCredentialId),
                             type: 'public-key'
                         }],
                         userVerification: 'preferred'
                     };
     
-                    const credential = await navigator.credentials.get({
-                        publicKey: publicKeyCredentialRequestOptions
-                    });
+                    // Simulate fingerprint authentication (WebAuthn credential request)
+                    const credential = await navigator.credentials.get({ publicKey: publicKeyCredentialRequestOptions });
     
+                    // Format authentication response
                     const authResponse = {
                         id: credential.id,
                         rawId: bufferEncode(credential.rawId),
@@ -117,15 +117,9 @@
                             userHandle: credential.response.userHandle ? bufferEncode(credential.response.userHandle) : null
                         }
                     };
-    
-                    const result = await fetch('http://localhost:8080/api/authenticate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(authResponse)
-                    });
-    
-                    const resultData = await result.json();
-                    document.getElementById('message').innerText = resultData.success ? `Authentication successful! OTP: ${resultData.otp}` : 'Authentication failed';
+                    
+                    // Simulate successful authentication
+                    document.getElementById('message').innerText = `Authentication successful! Credential ID: ${authResponse.id}`;
                 } catch (error) {
                     document.getElementById('message').innerText = 'Error during authentication: ' + error;
                 }
